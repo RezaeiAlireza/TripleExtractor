@@ -5,4 +5,4 @@ TripleExtractor is an AI-powered tool for extracting subject-predicate-object tr
 Download [BERT-BASE-CASED](https://huggingface.co/bert-base-cased) and put it under `backend/pretrained_models`.
 
 ### Model-State
-Download [Model-State]() and put it under `backend/tplinker/default_log_dir/r584cHKZ`.
+Download [Model-State](https://drive.google.com/file/d/1jgiPScLaWJoPd2BkeWe-jSapPLQMyKEx/view?usp=sharing) and put it under `backend/tplinker/default_log_dir/r584cHKZ`.
