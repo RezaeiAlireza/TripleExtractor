@@ -110,21 +110,24 @@ The frontend will be available at http://127.0.0.1:3000.
 TripleExtractor/
 │
 ├── backend/
-│   ├── app/
-│   │   ├── data4bert/      # Data and relation mappings for TPLinker
-│   │   ├── pretrained_models/  # Pretrained BERT models
-│   │   ├── tplinker/       # TPLinker model
-│   │   └── main.py         # FastAPI backend
+│   ├── data4bert/
+│   ├── pretrained_models/  # Pretrained BERT models
+│   ├── common/
+│   ├── tplinker/       # TPLinker model
+│   ├── main.py         # FastAPI backend
+│   ├── Dockerfile
 │   └── requirements.txt    # Backend dependencies
 │
 ├── frontend/
 │   ├── public/             # Public assets
+│   ├── Dockerfile
 │   ├── src/                # React source code
 │   │   ├── components/     # Reusable React components
 │   │   ├── pages/          # Page components (e.g., HomePage)
 │   │   └── App.js          # Main React app
 │   └── package.json        # Frontend dependencies
 │
+│   ├── docker-compose.yaml    
 └── README.md               # Project documentation
 ```
 ### Example Input and Output
