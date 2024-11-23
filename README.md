@@ -36,13 +36,11 @@ To run the project using Docker:
 
 1. Clone the Repository:
 ```bash
-Copy code
 git clone https://github.com/RezaeiAlireza/TripleExtractor.git
 cd TripleExtractor
 ```
 2. Build and Run Docker Containers:
 ```bash
-Copy code
 docker-compose up --build
 ```
 This command will:
@@ -65,43 +63,36 @@ If you prefer to set up and run the project manually:
 
 1. Clone the Repository:
 ```bash
-Copy code
 git clone https://github.com/RezaeiAlireza/TripleExtractor.git
 cd TripleExtractor/backend
 ```
 2. Set Up Conda Environment:
 ```bash
-Copy code
 conda create -n tplinker python=3.8 -y
 conda activate tplinker
 ```
 3. Install Dependencies:
 ```bash
-Copy code
 pip install -r requirements.txt
 ```
 4. Run Backend:
 ```bash
-Copy code
 uvicorn main:app --reload
 ```
 The backend will be available at http://127.0.0.1:8000.
 
 ### Frontend Setup
 
-`. Navigate to Frontend:
+1. Navigate to Frontend:
 ```bash
-Copy code
 cd ../frontend
 ```
 2. Install Dependencies:
 ```bash
-Copy code
 npm install
 ```
 3. Start Frontend:
 ```bash
-Copy code
 npm start
 ```
 The frontend will be available at http://127.0.0.1:3000.
@@ -116,7 +107,6 @@ The frontend will be available at http://127.0.0.1:3000.
 
 ## Project Structure
 ```plaintext
-Copy code
 TripleExtractor/
 │
 ├── backend/
@@ -144,7 +134,6 @@ Text:
 
 #### Output (JSON-LD)
 ```json
-Copy code
 {
   "@context": {
     "subject": "http://schema.org/subject",
