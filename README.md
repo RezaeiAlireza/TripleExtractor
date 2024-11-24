@@ -153,8 +153,11 @@ Text:
   ]
 }
 ```
+## Screenshots
+![Screenshot 2024-11-24 at 10 35 38](https://github.com/user-attachments/assets/17b5d282-8791-452a-8420-949eb84bc52c)
+![Screenshot 2024-11-24 at 10 34 27](https://github.com/user-attachments/assets/938978a9-2acd-47ff-ba5e-cce8b161fdcb)
 
-License
+## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 ### Acknowledgments
