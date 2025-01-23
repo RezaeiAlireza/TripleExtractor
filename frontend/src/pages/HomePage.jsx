@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles/HomePage.css';
-import logo from '../logo/logo.png';
 import InputForm from '../components/InputForm';
 import ResultDisplay from '../components/ResultDisplay';
 
@@ -185,8 +184,6 @@ const HomePage = () => {
           <button onClick={() => handleDownload('xml')}>XML</button>
           <button onClick={handleDownloadNotExtracted}>Not Extracted Inputs</button>
         </div>
-        <img src={logo} className="sidebar-logo" />
-
         </div>
       </div>
 
