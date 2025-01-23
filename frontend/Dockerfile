@@ -1,5 +1,5 @@
-# Use Node.js as the base image
-FROM node:alpine
+# Use Node.js 16 LTS as the base image
+FROM node:16-alpine
 
 # Set the working directory
 WORKDIR /app
@@ -12,6 +12,9 @@ RUN npm install
 
 # Copy the rest of the application files
 COPY . /app/
+
+# Build the application
+RUN npm run build
 
 # Use npm start to serve the application
 CMD ["npm", "start"]

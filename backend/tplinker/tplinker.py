@@ -1,11 +1,6 @@
-import re
 from tqdm import tqdm
-from IPython.core.debugger import set_trace
-import copy
 import torch
 import torch.nn as nn
-import json
-from torch.nn.parameter import Parameter
 from common.components import HandshakingKernel
 import math
 
@@ -329,64 +324,6 @@ class DataMaker4Bert():
               batch_input_ids, batch_attention_mask, batch_token_type_ids, tok2char_span_list, \
                 batch_ent_shaking_tag, batch_head_rel_shaking_tag, batch_tail_rel_shaking_tag
 
-class DataMaker4BiLSTM():
-    def __init__(self, text2indices, get_tok2char_span_map, handshaking_tagger):
-        self.text2indices = text2indices
-        self.handshaking_tagger = handshaking_tagger
-        self.get_tok2char_span_map = get_tok2char_span_map
-        
-    def get_indexed_data(self, data, max_seq_len, data_type = "train"):
-        indexed_samples = []
-        for ind, sample in tqdm(enumerate(data), desc = "Generate indexed train or valid data"):
-            text = sample["text"]
-
-            # tagging
-            spots_tuple = None
-            if data_type != "test":
-                spots_tuple = self.handshaking_tagger.get_spots(sample)
-            tok2char_span = self.get_tok2char_span_map(text)
-            tok2char_span.extend([(-1, -1)] * (max_seq_len - len(tok2char_span)))
-            input_ids = self.text2indices(text, max_seq_len)
-
-            sample_tp = (sample,
-                     input_ids,
-                     tok2char_span,
-                     spots_tuple,
-                    )
-            indexed_samples.append(sample_tp)       
-        return indexed_samples
-    
-    def generate_batch(self, batch_data, data_type = "train"):
-        sample_list = []
-        input_ids_list = []
-        tok2char_span_list = []
-        
-        ent_spots_list = []
-        head_rel_spots_list = []
-        tail_rel_spots_list = []
-
-        for tp in batch_data:
-            sample_list.append(tp[0])
-            input_ids_list.append(tp[1])    
-            tok2char_span_list.append(tp[2])
-            
-            if data_type != "test":
-                ent_matrix_spots, head_rel_matrix_spots, tail_rel_matrix_spots = tp[3]
-                ent_spots_list.append(ent_matrix_spots)
-                head_rel_spots_list.append(head_rel_matrix_spots)
-                tail_rel_spots_list.append(tail_rel_matrix_spots)
-
-        batch_input_ids = torch.stack(input_ids_list, dim = 0)
-        
-        batch_ent_shaking_tag, batch_head_rel_shaking_tag, batch_tail_rel_shaking_tag = None, None, None
-        if data_type != "test":
-            batch_ent_shaking_tag = self.handshaking_tagger.sharing_spots2shaking_tag4batch(ent_spots_list)
-            batch_head_rel_shaking_tag = self.handshaking_tagger.spots2shaking_tag4batch(head_rel_spots_list)
-            batch_tail_rel_shaking_tag = self.handshaking_tagger.spots2shaking_tag4batch(tail_rel_spots_list)
-
-        return sample_list, \
-                batch_input_ids, tok2char_span_list, \
-                batch_ent_shaking_tag, batch_head_rel_shaking_tag, batch_tail_rel_shaking_tag
     
 class TPLinkerBert(nn.Module):
     def __init__(self, encoder, 
@@ -456,15 +393,6 @@ class TPLinkerBert(nn.Module):
             if self.rel_add_dist:
                 shaking_hiddens4rel = shaking_hiddens + self.dist_embbedings[None,:,:].repeat(shaking_hiddens.size()[0], 1, 1)
                 
-#         if self.dist_emb_size != -1 and self.ent_add_dist:
-#             shaking_hiddens4ent = shaking_hiddens + self.dist_embbedings[None,:,:].repeat(shaking_hiddens.size()[0], 1, 1)
-#         else:
-#             shaking_hiddens4ent = shaking_hiddens
-#         if self.dist_emb_size != -1 and self.rel_add_dist:
-#             shaking_hiddens4rel = shaking_hiddens + self.dist_embbedings[None,:,:].repeat(shaking_hiddens.size()[0], 1, 1)
-#         else:
-#             shaking_hiddens4rel = shaking_hiddens
-            
         ent_shaking_outputs = self.ent_fc(shaking_hiddens4ent)
             
         head_rel_shaking_outputs_list = []
@@ -480,112 +408,6 @@ class TPLinkerBert(nn.Module):
         
         return ent_shaking_outputs, head_rel_shaking_outputs, tail_rel_shaking_outputs
 
-class TPLinkerBiLSTM(nn.Module):
-    def __init__(self, init_word_embedding_matrix, 
-                 emb_dropout_rate, 
-                 enc_hidden_size, 
-                 dec_hidden_size, 
-                 rnn_dropout_rate,
-                 rel_size, 
-                 shaking_type,
-                 inner_enc_type,
-                 dist_emb_size, 
-                 ent_add_dist, 
-                 rel_add_dist):
-        super().__init__()
-        self.word_embeds = nn.Embedding.from_pretrained(init_word_embedding_matrix, freeze = False)
-        self.emb_dropout = nn.Dropout(emb_dropout_rate)
-        self.enc_lstm = nn.LSTM(init_word_embedding_matrix.size()[-1], 
-                        enc_hidden_size // 2, 
-                        num_layers = 1, 
-                        bidirectional = True, 
-                        batch_first = True)
-        self.dec_lstm = nn.LSTM(enc_hidden_size, 
-                        dec_hidden_size // 2, 
-                        num_layers = 1, 
-                        bidirectional = True, 
-                        batch_first = True)
-        self.rnn_dropout = nn.Dropout(rnn_dropout_rate)
-        
-        hidden_size = dec_hidden_size
-           
-        self.ent_fc = nn.Linear(hidden_size, 2)
-        self.head_rel_fc_list = [nn.Linear(hidden_size, 3) for _ in range(rel_size)]
-        self.tail_rel_fc_list = [nn.Linear(hidden_size, 3) for _ in range(rel_size)]
-        
-        for ind, fc in enumerate(self.head_rel_fc_list):
-            self.register_parameter("weight_4_head_rel{}".format(ind), fc.weight)
-            self.register_parameter("bias_4_head_rel{}".format(ind), fc.bias)
-        for ind, fc in enumerate(self.tail_rel_fc_list):
-            self.register_parameter("weight_4_tail_rel{}".format(ind), fc.weight)
-            self.register_parameter("bias_4_tail_rel{}".format(ind), fc.bias)
-            
-        # handshaking kernel
-        self.handshaking_kernel = HandshakingKernel(hidden_size, shaking_type, inner_enc_type)
-        
-        # distance embedding
-        self.dist_emb_size = dist_emb_size
-        self.dist_embbedings = None # it will be set in the first forwarding
-        
-        self.ent_add_dist = ent_add_dist
-        self.rel_add_dist = rel_add_dist
-        
-    def forward(self, input_ids):
-        # input_ids: (batch_size, seq_len)
-        # embedding: (batch_size, seq_len, emb_dim)
-        embedding = self.word_embeds(input_ids)
-        embedding = self.emb_dropout(embedding)
-        # lstm_outputs: (batch_size, seq_len, enc_hidden_size)
-        lstm_outputs, _ = self.enc_lstm(embedding)
-        lstm_outputs = self.rnn_dropout(lstm_outputs)
-        # lstm_outputs: (batch_size, seq_len, dec_hidden_size)
-        lstm_outputs, _ = self.dec_lstm(lstm_outputs)
-        lstm_outputs = self.rnn_dropout(lstm_outputs)
-        
-        # shaking_hiddens: (batch_size, 1 + ... + seq_len, hidden_size)
-        shaking_hiddens = self.handshaking_kernel(lstm_outputs)
-        shaking_hiddens4ent = shaking_hiddens
-        shaking_hiddens4rel = shaking_hiddens
-        
-        # add distance embeddings if it is set
-        if self.dist_emb_size != -1:
-            # set self.dist_embbedings
-            hidden_size = shaking_hiddens.size()[-1]
-            if self.dist_embbedings is None:
-                dist_emb = torch.zeros([self.dist_emb_size, hidden_size]).to(shaking_hiddens.device)
-                for d in range(self.dist_emb_size):
-                    for i in range(hidden_size):
-                        if i % 2 == 0:
-                            dist_emb[d][i] = math.sin(d / 10000**(i / hidden_size))
-                        else:
-                            dist_emb[d][i] = math.cos(d / 10000**((i - 1) / hidden_size))
-                seq_len = input_ids.size()[1]
-                dist_embbeding_segs = []
-                for after_num in range(seq_len, 0, -1):
-                    dist_embbeding_segs.append(dist_emb[:after_num, :])
-                self.dist_embbedings = torch.cat(dist_embbeding_segs, dim = 0)
-            
-            if self.ent_add_dist:
-                shaking_hiddens4ent = shaking_hiddens + self.dist_embbedings[None,:,:].repeat(shaking_hiddens.size()[0], 1, 1)
-            if self.rel_add_dist:
-                shaking_hiddens4rel = shaking_hiddens + self.dist_embbedings[None,:,:].repeat(shaking_hiddens.size()[0], 1, 1)
-                
-            
-        ent_shaking_outputs = self.ent_fc(shaking_hiddens4ent)
-        
-        head_rel_shaking_outputs_list = []
-        for fc in self.head_rel_fc_list:
-            head_rel_shaking_outputs_list.append(fc(shaking_hiddens4rel))
-            
-        tail_rel_shaking_outputs_list = []
-        for fc in self.tail_rel_fc_list:
-            tail_rel_shaking_outputs_list.append(fc(shaking_hiddens4rel))
-        
-        head_rel_shaking_outputs = torch.stack(head_rel_shaking_outputs_list, dim = 1)
-        tail_rel_shaking_outputs = torch.stack(tail_rel_shaking_outputs_list, dim = 1)
-        
-        return ent_shaking_outputs, head_rel_shaking_outputs, tail_rel_shaking_outputs
-    
 class MetricsCalculator():
     def __init__(self, handshaking_tagger):
         self.handshaking_tagger = handshaking_tagger

@@ -1,0 +1,50 @@
+# General System Files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Node.js/React (Frontend)
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+frontend/npm-debug.log*
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Python/FastAPI (Backend)
+backend/__pycache__/
+backend/*.py[cod]
+backend/*.pyo
+backend/venv/
+backend/.env
+backend/.env.local
+backend/env/
+backend/env.bak/
+backend/env.bak/
+backend/build/
+backend/dist/
+backend/*.egg-info/
+backend/*.sqlite3
+backend/*.log
+backend/tplinker/default_log_dir/nyt/*.*
+backend/tplinker/default_log_dir/webnlg/*.*
+backend/tplinker/__pycache__/
+backend/pretrianed_models/bert-base-cased/config.json
+backend/pretrianed_models/bert-base-cased/pytorch_model.bin
+backend/pretrianed_models/bert-base-cased/vocab.txt
+backend/common/__pycache__/
+# Docker
+*.env
+docker-compose.override.yml
+.dockerignore
+
+# Ignore Editor/IDE Config Files
+.idea/
+.vscode/
+*.swp
+*.swo
