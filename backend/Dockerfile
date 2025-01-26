@@ -1,9 +1,10 @@
-# Use an official Python runtime as a base image
-FROM python:3.9-slim
+FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 
-# Install system dependencies for Python and spaCy
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    python3-dev \
+    python3-pip \
+    python3-venv \
     gcc \
     g++ \
     curl \
@@ -11,29 +12,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopenblas-dev \
     liblapack-dev \
     libatlas-base-dev \
+    && ln -s /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip, setuptools, and wheel
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Set the working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy language model
-RUN python -m spacy download en_core_web_sm || echo "SpaCy model download failed but continuing..."
+RUN python -m spacy download en_core_web_sm
 
-# Copy the rest of the backend code
 COPY . /app/
 
-# Set PYTHONPATH
 ENV PYTHONPATH=/app
 
-# Expose the FastAPI default port
 EXPOSE 8000
 
-# Command to run the FastAPI server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

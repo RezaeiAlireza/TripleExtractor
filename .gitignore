@@ -34,10 +34,13 @@ backend/*.log
 backend/tplinker/default_log_dir/nyt/*.*
 backend/tplinker/default_log_dir/webnlg/*.*
 backend/tplinker/__pycache__/
-backend/pretrianed_models/bert-base-cased/config.json
-backend/pretrianed_models/bert-base-cased/pytorch_model.bin
-backend/pretrianed_models/bert-base-cased/vocab.txt
+backend/pretrained_models/bert-base-cased/config.json
+backend/pretrained_models/bert-base-cased/pytorch_model.bin
+backend/pretrained_models/bert-base-cased/vocab.txt
+backend/pretrained_models/bert-base-cased/tokenizer.json
 backend/common/__pycache__/
+
+backend/not_extracted_inputs.txt
 # Docker
 *.env
 docker-compose.override.yml

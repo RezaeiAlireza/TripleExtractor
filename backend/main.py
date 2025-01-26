@@ -54,7 +54,7 @@ app.add_middleware(
 try:
     with open(config["rel2id_path_nyt"], "r", encoding="utf-8") as f:
         rel2id_nyt = json.load(f)
-    tokenizer_nyt = BertTokenizerFast.from_pretrained(config["bert_path_nyt"], do_lower_case=False)
+    tokenizer_nyt = BertTokenizerFast.from_pretrained(config['bert_path_nyt'], do_lower_case=False)
     nyt_tagger = HandshakingTaggingScheme(rel2id=rel2id_nyt, max_seq_len=config["max_seq_len"])
     nyt_data_maker = DataMaker4Bert(tokenizer_nyt, nyt_tagger)
 
@@ -68,7 +68,7 @@ try:
         rel_add_dist=False,
     ).to(config["device"])
     nyt_model.load_state_dict(
-        torch.load(config["model_state_path_nyt"], map_location=config["device"], weights_only=True),
+        torch.load(config["model_state_path_nyt"], map_location=config["device"]),
         strict=False
     )
     nyt_model.eval()
@@ -95,7 +95,7 @@ try:
         rel_add_dist=False,
     ).to(config["device"])
     webnlg_model.load_state_dict(
-        torch.load(config["model_state_path_webnlg"], map_location=config["device"], weights_only=True),
+        torch.load(config["model_state_path_webnlg"], map_location=config["device"]),
         strict=False
     )
     webnlg_model.eval()
