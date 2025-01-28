@@ -19,7 +19,16 @@ from tplinker.tplinker import (
     DataMaker4Bert
 )
 
-# Configuration
+import re
+
+from huggingface_hub import InferenceClient
+from xml.etree.ElementTree import Element, SubElement, tostring
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+HUGGINGFACE_API_KEY = os.getenv("HF_TOKEN_LLAMA")
+
 config = {
     # NYT (BERT)
     "bert_path_nyt": "./pretrained_models/bert-base-cased",
@@ -110,7 +119,7 @@ class TextRequest(BaseModel):
     url: Optional[str] = None
     format: Optional[str] = "json-ld"
     model: Optional[str] = "NYT"
-
+    use_llm: Optional[bool] = False
 
 def validate_english_language(text):
     try:
@@ -186,7 +195,40 @@ def extract_relations(text, model_choice):
 
     return rel_list
 
+# -----------------------------------
+# Additional LLM for Post-Validation
+# -----------------------------------
 
+LLM_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
+
+client = InferenceClient(model=LLM_MODEL, token=HUGGINGFACE_API_KEY)
+def validate_relations_with_llm(relations):
+
+    filtered_relations = []
+
+    for rel in relations:
+        prompt = f"""
+        You are an AI fact-checking assistant. Verify if the following relationship is factually correct:
+        - **Subject:** {rel['subject']}
+        - **Predicate:** {rel['predicate']}
+        - **Object:** {rel['object']}
+        
+        If the relationship is correct and commonly accepted knowledge, reply with exactly: VALID.
+        If the relationship is incorrect or nonsensical, reply with exactly: INVALID.
+        Do NOT provide explanations, only reply with VALID or INVALID.
+        Remember that a location cannot contains a person, but a person could be born, grow up, die, live, or visit a location.
+        A person can have a profession, be a member of an organization, be a spouse of another person, or have a child.
+        """
+
+        response = client.text_generation(prompt, max_new_tokens=10).strip()
+
+        match = re.search(r"\b(VALID|INVALID)\b", response, re.IGNORECASE)
+        normalized_response = match.group(1).upper() if match else "INVALID"
+
+        if normalized_response == "VALID":
+            filtered_relations.append(rel)
+
+    return filtered_relations
 def serialize_to_jsonld(triples):
     """Serialize triples to JSON-LD format."""
     return {
@@ -231,7 +273,6 @@ def serialize_to_rdf(triples):
 
 def serialize_to_xml(triples):
     """Serialize triples to XML format."""
-    from xml.etree.ElementTree import Element, SubElement, tostring
     root = Element("Triples")
     for triple in triples:
         triple_el = SubElement(root, "Triple")
@@ -245,48 +286,45 @@ def serialize_to_xml(triples):
 # Endpoint to Extract Triples
 # --------------
 @app.post("/extract-triples/")
-async def extract_triples(request: TextRequest):
+async def extract_triples(request: TextRequest, use_llm: bool = False):
     """
     API endpoint to extract triples and return in the requested format.
-    This endpoint filters out duplicate sentences before passing them to the model.
+    It now uses an LLM (e.g., Llama-3, Mistral) to validate the extracted triples before returning.
     """
     model_choice = request.model.upper()
     not_supported_inputs = []
+    use_llm = request.use_llm
     try:
         # Validate inputs
         if request.url and request.text:
-            raise HTTPException(
-                status_code=400,
-                detail="Provide either 'text' or 'url', not both."
-            )
+            raise HTTPException(status_code=400, detail="Provide either 'text' or 'url', not both.")
         if not request.url and not request.text:
-            raise HTTPException(
-                status_code=400,
-                detail="Either 'text' or 'url' must be provided."
-            )
+            raise HTTPException(status_code=400, detail="Either 'text' or 'url' must be provided.")
 
-        if request.url:
-            text = fetch_text_from_url(request.url)
-        else:
-            text = request.text.strip()
-        rel_list_temp=[]
-        text = filter_duplicate_sentences(text)
-        for i in text:
-            if validate_english_language(i):
-                rel_list_temp.append(extract_relations(i, model_choice))
+        # Fetch text from URL or input
+        text = fetch_text_from_url(request.url) if request.url else request.text.strip()
+        rel_list_temp = []
+        
+        # Split and process text
+        sentences = filter_duplicate_sentences(text)
+        for sentence in sentences:
+            if validate_english_language(sentence):
+                rel_list_temp.append(extract_relations(sentence, model_choice))
             else:
-                not_supported_inputs.append(i)
-        rel_list=[]
-        for i in rel_list_temp:
-            for j in i:
-                rel_list.append(j)
-        if not_supported_inputs:
-            with open("not_extracted_inputs.txt", "w", encoding="utf-8") as file:
-                file.write("\n".join(not_supported_inputs))
+                not_supported_inputs.append(sentence)
+        
+        rel_list = [rel for sublist in rel_list_temp for rel in sublist]
+
+        print(use_llm)
+        if use_llm:
+            rel_list = validate_relations_with_llm(rel_list)
+
+        if not rel_list:
+            raise HTTPException(status_code=400, detail="No valid relations found after validation.")
+        
         fmt = request.format.lower()
         if fmt == "json-ld":
-            serialized_output = serialize_to_jsonld(rel_list)
-            content = json.dumps(serialized_output, indent=2)
+            content = json.dumps(serialize_to_jsonld(rel_list), indent=2)
             filename = "output.jsonld"
             content_type = "application/ld+json"
         elif fmt == "csv":
@@ -304,18 +342,7 @@ async def extract_triples(request: TextRequest):
         else:
             raise HTTPException(status_code=400, detail="Unsupported format.")
 
-        return Response(
-            content=content,
-            media_type=content_type,
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
-        )
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+        return Response(content=content, media_type=content_type, headers={"Content-Disposition": f"attachment; filename={filename}"})
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

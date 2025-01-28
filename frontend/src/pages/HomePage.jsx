@@ -12,6 +12,13 @@ const HomePage = () => {
   const [model, setModel] = useState('NYT');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [useAdditionalLLM, setUseAdditionalLLM] = useState(false);
+
+
+  const handleLLMChange = (event) => {
+    setUseAdditionalLLM(event.target.value === "true"); // Convert to boolean
+  };
+
 
   const handleSubmit = async ({ text, url, model }) => {
     setIsLoading(true);
@@ -27,6 +34,7 @@ const HomePage = () => {
         url: url || null,
         format: 'json-ld',
         model,
+        use_llm: useAdditionalLLM
       });
       setResults(response.data);
     } catch (error) {
@@ -53,6 +61,8 @@ const HomePage = () => {
           url: inputType === 'url' ? input : null,
           format: format,
           model: model,
+          use_llm: useAdditionalLLM
+
         }),
       });
   
@@ -183,6 +193,29 @@ const HomePage = () => {
           <button onClick={() => handleDownload('rdf')}>RDF</button>
           <button onClick={() => handleDownload('xml')}>XML</button>
           <button onClick={handleDownloadNotExtracted}>Not Extracted Inputs</button>
+        </div>
+        <h3>Use Additional LLM for Validation:</h3>
+        <div className="sidebar-section">
+          <label>
+            <input
+              type="radio"
+              name="additional-llm"
+              value="true"
+              checked={useAdditionalLLM === true}
+              onChange={handleLLMChange}
+            />
+            Yes
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="additional-llm"
+              value="false"
+              checked={useAdditionalLLM === false}
+              onChange={handleLLMChange}
+            />
+            No
+          </label>
         </div>
         </div>
       </div>
