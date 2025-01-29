@@ -167,9 +167,9 @@ Text:
 }
 ```
 ## Screenshots
-![img](imgCap\image.png)
-![gif1](imgCap\1.gif)
-![gif2](imgCap\2.gif)
+![image](https://github.com/user-attachments/assets/23649844-24fc-48f7-8900-b4eef81ae159)
+![1](https://github.com/user-attachments/assets/9b814077-2fa8-4bd6-a546-04548c38d80c)
+![2](https://github.com/user-attachments/assets/f53c22a2-eb52-414d-87cd-b5e4a2784fb9)
 
 
 ## License
