@@ -9,7 +9,7 @@ This project integrates a FastAPI backend and a React frontend, providing an int
 2. Provide a URL to fetch and extract text from web pages.
 3. Upload text files for processing.
 
-- Multiple Output Formats:
+- Downloadable Output Formats:
 1. JSON-LD
 2. CSV
 3. RDF (Turtle format)
@@ -23,6 +23,18 @@ Allows users to download results in their preferred format.
 
 - Advanced Error Handling:
 Handles input errors, server errors, and network issues gracefully.
+
+- Output:
+The output is in the tabular format for better visualization.
+
+- Latest Update:
+An additional LLM is added to validate the generated triples which uses Llama 3 8B Instruct from Huggingface.
+
+## Pre-Setup
+
+1. You need to navigate to [HuggingFace-Llama 3 8B Instruct](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) page and request permission to access the model.
+2. Generate a SSH key and set it in a .env variable in root of backend folder under like: HF_TOKEN_LLAMA = hf_***
+3. You need at least 2GB of GPU access to run this code.
 
 ## Installation
 Follow the steps below to set up the project locally.
@@ -54,8 +66,8 @@ This command will:
 If you prefer to set up and run the project manually:
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 16+
+- Python 3.9, 3.10
+- Node.js 16
 - Conda (Recommended) for environment management
 - Git for version control
   
@@ -68,7 +80,7 @@ cd TripleExtractor/backend
 ```
 2. Set Up Conda Environment:
 ```bash
-conda create -n tplinker python=3.8 -y
+conda create -n tplinker python=3.9 -y
 conda activate tplinker
 ```
 3. Install Dependencies:
@@ -100,10 +112,11 @@ The frontend will be available at http://127.0.0.1:3000.
 ## Usage
 1. Launch the application in your browser: http://127.0.0.1:3000.
 2. Choose your input type (Text, URL, or File).
-3. Enter your text, paste the URL, or upload a text file.
-4. Select your desired output format: JSON-LD, CSV, RDF, or XML.
-5. Click Submit to process the input and view the results.
-6. Use the Download button to save the results in your selected format.
+3. Choose the model between NYT or WebNLG.
+- Optional: You can select additional LLM verification to yes in order for a post-filtering on result to improve results.
+4. Enter your text, paste the URL, or upload a text file.
+5. Press extract and wait for the model to process and show the output.
+5. Use the Download section to choose the desired format to download the generated output.
 
 ## Project Structure
 ```plaintext
@@ -111,24 +124,24 @@ TripleExtractor/
 │
 ├── backend/
 │   ├── data4bert/
-│   ├── pretrained_models/  # Pretrained BERT models
+│   ├── pretrained_models/ 
 │   ├── common/
-│   ├── tplinker/       # TPLinker model
-│   ├── main.py         # FastAPI backend
+│   ├── tplinker/    
+│   ├── main.py      
 │   ├── Dockerfile
-│   └── requirements.txt    # Backend dependencies
+│   └── requirements.txt 
 │
 ├── frontend/
-│   ├── public/             # Public assets
+│   ├── public/          
 │   ├── Dockerfile
-│   ├── src/                # React source code
-│   │   ├── components/     # Reusable React components
-│   │   ├── pages/          # Page components (e.g., HomePage)
-│   │   └── App.js          # Main React app
-│   └── package.json        # Frontend dependencies
+│   ├── src/             
+│   │   ├── components/     
+│   │   ├── pages/          
+│   │   └── App.js        
+│   └── package.json       
 │
 │   ├── docker-compose.yaml    
-└── README.md               # Project documentation
+└── README.md              
 ```
 ### Example Input and Output
 #### Input (Text)
@@ -154,8 +167,10 @@ Text:
 }
 ```
 ## Screenshots
-![Screenshot 2024-11-24 at 10 35 38](https://github.com/user-attachments/assets/17b5d282-8791-452a-8420-949eb84bc52c)
-![Screenshot 2024-11-24 at 10 34 27](https://github.com/user-attachments/assets/938978a9-2acd-47ff-ba5e-cce8b161fdcb)
+![img](imgCap\image.png)
+![gif1](imgCap\1.gif)
+![gif2](imgCap\2.gif)
+
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
