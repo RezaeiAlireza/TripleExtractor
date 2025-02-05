@@ -190,7 +190,7 @@ const HomePage = () => {
         <div className="sidebar-section">
           <button onClick={() => handleDownload('json-ld')}>JSON-LD</button>
           <button onClick={() => handleDownload('csv')}>CSV</button>
-          <button onClick={() => handleDownload('rdf')}>RDF</button>
+          <button onClick={() => handleDownload('rdf')}>Turtle</button>
           <button onClick={() => handleDownload('xml')}>XML</button>
           <button onClick={handleDownloadNotExtracted}>Not Extracted Inputs</button>
         </div>

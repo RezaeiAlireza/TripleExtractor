@@ -1,23 +1,14 @@
-# Use Node.js 16 LTS as the base image
-FROM node:16-alpine
+FROM node:16-alpine AS build
 
-# Set the working directory
 WORKDIR /app
-
-# Copy the dependency files first to leverage Docker's caching
-COPY package.json package-lock.json /app/
-
-# Install dependencies
+COPY package.json package-lock.json ./
 RUN npm install
-
-# Copy the rest of the application files
-COPY . /app/
-
-# Build the application
+COPY . ./
 RUN npm run build
 
-# Use npm start to serve the application
-CMD ["npm", "start"]
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port 3000
-EXPOSE 3000
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

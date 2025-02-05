@@ -301,11 +301,9 @@ async def extract_triples(request: TextRequest, use_llm: bool = False):
         if not request.url and not request.text:
             raise HTTPException(status_code=400, detail="Either 'text' or 'url' must be provided.")
 
-        # Fetch text from URL or input
         text = fetch_text_from_url(request.url) if request.url else request.text.strip()
         rel_list_temp = []
         
-        # Split and process text
         sentences = filter_duplicate_sentences(text)
         for sentence in sentences:
             if validate_english_language(sentence):
@@ -313,9 +311,12 @@ async def extract_triples(request: TextRequest, use_llm: bool = False):
             else:
                 not_supported_inputs.append(sentence)
         
+        if len(not_supported_inputs) > 0:
+            with open("not_extracted_inputs.txt", "w", encoding="utf-8") as file:
+                file.write("\n".join(not_supported_inputs))
+
         rel_list = [rel for sublist in rel_list_temp for rel in sublist]
 
-        print(use_llm)
         if use_llm:
             rel_list = validate_relations_with_llm(rel_list)
 
