@@ -1,3 +1,5 @@
+![2](https://github.com/user-attachments/assets/f53c22a2-eb52-414d-87cd-b5e4a2784fb9)
+
 # TripleExtractor
 TripleExtractor is a cutting-edge application designed to extract subject-predicate-object triples from input text, URLs, or text files. Powered by [TPLinker](https://github.com/131250208/TPlinker-joint-extraction), a state-of-the-art model for relation extraction, this project supports various output formats including JSON-LD, CSV, RDF, and XML.
 This project integrates a FastAPI backend and a React frontend, providing an intuitive user interface and seamless server-client communication. For ease of deployment, the project is fully Dockerized.
@@ -169,7 +171,6 @@ Text:
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/23649844-24fc-48f7-8900-b4eef81ae159)
 ![1](https://github.com/user-attachments/assets/9b814077-2fa8-4bd6-a546-04548c38d80c)
-![2](https://github.com/user-attachments/assets/f53c22a2-eb52-414d-87cd-b5e4a2784fb9)
 
 
 ## License
