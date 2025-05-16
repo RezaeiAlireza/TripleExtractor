@@ -2,7 +2,7 @@ spacy==3.4.4
 thinc==8.1.0
 fastapi==0.94.1
 uvicorn==0.32.0
-torch==2.0.1
+torch==2.1.1
 transformers==4.31.0
 rdflib==7.1.0
 newspaper3k==0.2.8
